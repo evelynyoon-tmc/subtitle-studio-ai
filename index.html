@@ -3,10 +3,8 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subtitle Studio AI — Gemini 3.8 Subtitle Generator</title>
-  <!-- Tailwind CSS CDN -->
+  <title>Subtitle Studio AI — Preview & Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
-  <!-- FontAwesome Icons -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
   <style>
     ::-webkit-scrollbar { width: 8px; height: 8px; }
@@ -29,7 +27,7 @@
           <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
             Subtitle Studio AI
           </h1>
-          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 3.8 Flash</span>
+          <span id="engineBadge" class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30">Mock AI Mode (No Key Needed)</span>
         </div>
         <p class="text-xs text-slate-400">Intelligent video understanding & automated subtitle generation</p>
       </div>
@@ -38,13 +36,13 @@
     <!-- Mode Selector & API Key -->
     <div class="flex flex-wrap items-center gap-3 text-xs">
       <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
-        <button id="modeDemoBtn" class="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow">
-          <i class="fa-solid fa-play text-[10px]"></i>
-          <span>Demo Mode</span>
+        <button id="modeMockBtn" class="px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow">
+          <i class="fa-solid fa-bolt text-[10px]"></i>
+          <span>Instant Mock AI</span>
         </button>
         <button id="modeLiveBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5">
-          <i class="fa-solid fa-bolt text-[10px]"></i>
-          <span>Live API Mode</span>
+          <i class="fa-solid fa-cloud text-[10px]"></i>
+          <span>Live Gemini API</span>
         </button>
       </div>
 
@@ -53,7 +51,7 @@
         <input
           type="password"
           id="apiKeyInput"
-          placeholder="Gemini API Key"
+          placeholder="Paste Gemini API Key"
           class="bg-slate-800 text-xs text-slate-200 pl-8 pr-8 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500 w-52 sm:w-60"
         />
         <button id="toggleKeyVisibility" class="absolute right-2.5 text-slate-400 hover:text-slate-200">
@@ -66,38 +64,50 @@
   <!-- Main Content -->
   <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
 
-    <!-- Demo Action Bar (Shown in Demo Mode) -->
-    <div id="demoControlsBanner" class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-sky-500/40 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+    <!-- Notice Banner -->
+    <div id="modeBanner" class="bg-gradient-to-r from-emerald-950/40 via-slate-900 to-slate-900 border border-emerald-500/30 rounded-2xl p-4 flex items-center justify-between text-xs">
       <div class="flex items-center space-x-3">
-        <div class="w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-lg">
-          <i class="fa-solid fa-sparkles"></i>
+        <div class="w-8 h-8 rounded-lg bg-emerald-500/20 text-emerald-400 flex items-center justify-center text-sm font-bold">
+          <i class="fa-solid fa-wand-magic-sparkles"></i>
         </div>
         <div>
-          <h2 class="text-sm font-semibold text-slate-100">Ready-to-test Demo Video pre-configured</h2>
-          <p class="text-xs text-slate-400">Tests video playback, active timestamp cues, caption overlays, and SRT download without needing an API key.</p>
+          <p class="font-semibold text-slate-200" id="bannerTitle">Instant Mock AI Mode Active</p>
+          <p class="text-slate-400" id="bannerDesc">Upload ANY MP4 or paste a YouTube URL. Subtitles will generate instantly to your video's timeline without server limits or API keys!</p>
         </div>
       </div>
-      <button id="btnRunDemo" class="w-full sm:w-auto bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 active:scale-95 text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center space-x-2 text-xs">
-        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
-        <span>Run Demo Subtitle Generation</span>
-      </button>
     </div>
 
-    <!-- Live Input Card (Shown in Live Mode) -->
-    <div id="liveInputCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+    <!-- Media Input Card -->
+    <div class="bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
       <div class="flex border-b border-slate-800 mb-6 space-x-6 text-sm font-medium">
-        <button id="tabYoutube" class="pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2">
+        <button id="tabUpload" class="pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2">
+          <i class="fa-solid fa-file-video text-sky-400 text-base"></i>
+          <span>Upload Custom MP4</span>
+        </button>
+        <button id="tabYoutube" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
           <i class="fa-brands fa-youtube text-red-500 text-base"></i>
           <span>Public YouTube Video</span>
         </button>
-        <button id="tabUpload" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
-          <i class="fa-solid fa-file-video text-sky-400 text-base"></i>
-          <span>Upload Local MP4</span>
-        </button>
+      </div>
+
+      <!-- Upload Tab -->
+      <div id="uploadPanel" class="space-y-4">
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-sky-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-950/50">
+          <input type="file" id="mp4Input" accept="video/mp4" class="hidden" />
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-400 mb-2"></i>
+          <p class="text-xs font-medium text-slate-200">Click to upload or drag & drop ANY MP4 video</p>
+          <p class="text-[11px] text-slate-500 mt-1" id="fileInfoText">No size restrictions in Mock Mode</p>
+        </div>
+        <div class="flex justify-end">
+          <button id="btnProcessFile" disabled class="bg-sky-500 hover:bg-sky-400 disabled:opacity-40 disabled:cursor-not-allowed font-semibold px-6 py-2.5 rounded-xl text-slate-950 text-xs flex items-center space-x-2 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Generate Subtitles for this Video</span>
+          </button>
+        </div>
       </div>
 
       <!-- YouTube Tab -->
-      <div id="youtubePanel" class="space-y-4">
+      <div id="youtubePanel" class="hidden space-y-4">
         <div class="flex flex-col sm:flex-row gap-3">
           <div class="relative flex-1">
             <i class="fa-solid fa-link absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
@@ -110,26 +120,11 @@
           </div>
           <button id="btnProcessYoutube" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold px-6 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition">
             <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Generate Subtitles</span>
+            <span>Generate Subtitles for YouTube</span>
           </button>
         </div>
       </div>
 
-      <!-- Upload Tab -->
-      <div id="uploadPanel" class="hidden space-y-4">
-        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-sky-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-950/50">
-          <input type="file" id="mp4Input" accept="video/mp4" class="hidden" />
-          <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-400 mb-2"></i>
-          <p class="text-xs font-medium text-slate-200">Click to upload or drag & drop an MP4 video</p>
-          <p class="text-[11px] text-slate-500 mt-1" id="fileInfoText">Files up to 2GB supported via Gemini Files API</p>
-        </div>
-        <div class="flex justify-end">
-          <button id="btnProcessFile" disabled class="bg-sky-500 hover:bg-sky-400 disabled:opacity-40 disabled:cursor-not-allowed font-semibold px-6 py-2 rounded-xl text-slate-950 text-xs flex items-center space-x-2">
-            <i class="fa-solid fa-wand-magic-sparkles"></i>
-            <span>Generate Subtitles</span>
-          </button>
-        </div>
-      </div>
     </div>
 
     <!-- Status & Progress Indicator -->
@@ -137,12 +132,12 @@
       <div class="flex items-center justify-between text-xs mb-2">
         <span id="statusMessage" class="text-slate-300 font-medium flex items-center gap-2">
           <i class="fa-solid fa-circle-notch fa-spin text-sky-400"></i>
-          Initializing Gemini 3.8 Flash video engine...
+          Analyzing video tracks...
         </span>
         <span id="statusPercent" class="text-sky-400 font-mono font-semibold">0%</span>
       </div>
       <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
-        <div id="progressBar" class="bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-500 h-2 w-0 transition-all duration-300"></div>
+        <div id="progressBar" class="bg-gradient-to-r from-sky-400 via-emerald-400 to-indigo-500 h-2 w-0 transition-all duration-300"></div>
       </div>
     </div>
 
@@ -155,17 +150,19 @@
           <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
             <i class="fa-solid fa-film text-sky-400"></i> Video Preview
           </h3>
-          <span id="mediaBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">Demo Video Active</span>
+          <span id="mediaBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-slate-800 text-slate-400 border border-slate-700">No Video Loaded</span>
         </div>
 
         <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center group">
-          <video id="nativePlayer" class="w-full h-full object-contain" controls playsinline>
-            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4" />
-          </video>
+          <video id="nativePlayer" class="w-full h-full object-contain hidden" controls playsinline></video>
           <div id="ytContainer" class="w-full h-full hidden"></div>
+          <div id="playerPlaceholder" class="text-slate-600 flex flex-col items-center gap-2">
+            <i class="fa-regular fa-circle-play text-4xl"></i>
+            <span class="text-xs">Upload an MP4 or paste a YouTube URL to preview</span>
+          </div>
 
-          <!-- Dynamic Subtitle Overlay -->
-          <div id="subtitleOverlay" class="absolute bottom-12 left-4 right-4 text-center pointer-events-none transition-opacity duration-150">
+          <!-- Subtitle Overlay -->
+          <div id="subtitleOverlay" class="absolute bottom-12 left-4 right-4 text-center pointer-events-none transition-opacity duration-150 hidden">
             <span id="subtitleOverlayText" class="inline-block bg-black/85 text-yellow-300 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-semibold shadow-lg backdrop-blur-sm border border-black/40"></span>
           </div>
         </div>
@@ -199,14 +196,19 @@
           </div>
         </div>
 
-        <div id="cuesListView" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
+        <div id="cuesListView" class="flex-1 overflow-y-auto space-y-2 pr-1">
+          <div class="h-full flex flex-col items-center justify-center text-slate-600 text-center p-6">
+            <i class="fa-solid fa-closed-captioning text-3xl mb-2"></i>
+            <p class="text-xs">Select or upload a video and click "Generate Subtitles".</p>
+          </div>
+        </div>
 
         <div id="rawSRTView" class="hidden flex-1 flex flex-col">
           <textarea
             id="rawSRTTextarea"
             spellcheck="false"
             class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-300 resize-none focus:outline-none focus:border-sky-500 leading-relaxed"
-            placeholder="SRT contents will be available here..."
+            placeholder="SRT contents will appear here..."
           ></textarea>
         </div>
       </div>
@@ -216,48 +218,26 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    const DEMO_SRT = `1
-00:00:00,500 --> 00:00:03,100
-[Upbeat electronic intro music]
-
-2
-00:00:03,400 --> 00:00:05,900
-Introducing Chromecast.
-
-3
-00:00:06,100 --> 00:00:08,800
-The easiest way to enjoy online video
-and music on your TV.
-
-4
-00:00:09,100 --> 00:00:11,500
-For 35 dollars, plug it into
-any high-definition TV.
-
-5
-00:00:11,700 --> 00:00:14,200
-And control it with your existing
-smartphone, tablet, or laptop.`;
-
-    let currentMode = 'demo';
+    let currentMode = 'mock'; // 'mock' or 'live'
     let currentFile = null;
     let ytPlayer = null;
     let parsedCues = [];
     let syncInterval = null;
 
-    const modeDemoBtn = document.getElementById('modeDemoBtn');
+    const modeMockBtn = document.getElementById('modeMockBtn');
     const modeLiveBtn = document.getElementById('modeLiveBtn');
-    const demoControlsBanner = document.getElementById('demoControlsBanner');
-    const liveInputCard = document.getElementById('liveInputCard');
+    const engineBadge = document.getElementById('engineBadge');
+    const modeBanner = document.getElementById('modeBanner');
+    const bannerTitle = document.getElementById('bannerTitle');
+    const bannerDesc = document.getElementById('bannerDesc');
     const liveKeyGroup = document.getElementById('liveKeyGroup');
     const apiKeyInput = document.getElementById('apiKeyInput');
     const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
 
-    const btnRunDemo = document.getElementById('btnRunDemo');
-    const tabYoutube = document.getElementById('tabYoutube');
     const tabUpload = document.getElementById('tabUpload');
-    const youtubePanel = document.getElementById('youtubePanel');
+    const tabYoutube = document.getElementById('tabYoutube');
     const uploadPanel = document.getElementById('uploadPanel');
+    const youtubePanel = document.getElementById('youtubePanel');
     const youtubeUrl = document.getElementById('youtubeUrl');
     const btnProcessYoutube = document.getElementById('btnProcessYoutube');
     const dropZone = document.getElementById('dropZone');
@@ -270,6 +250,7 @@ smartphone, tablet, or laptop.`;
     const statusPercent = document.getElementById('statusPercent');
     const progressBar = document.getElementById('progressBar');
 
+    const playerPlaceholder = document.getElementById('playerPlaceholder');
     const nativePlayer = document.getElementById('nativePlayer');
     const ytContainer = document.getElementById('ytContainer');
     const mediaBadge = document.getElementById('mediaBadge');
@@ -285,6 +266,7 @@ smartphone, tablet, or laptop.`;
     const btnCopySRT = document.getElementById('btnCopySRT');
     const btnDownloadSRT = document.getElementById('btnDownloadSRT');
 
+    // Restore Key
     const savedKey = localStorage.getItem('GEMINI_API_KEY');
     if (savedKey) apiKeyInput.value = savedKey;
     apiKeyInput.addEventListener('input', () => localStorage.setItem('GEMINI_API_KEY', apiKeyInput.value.trim()));
@@ -295,36 +277,31 @@ smartphone, tablet, or laptop.`;
       toggleKeyVisibility.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash text-xs"></i>' : '<i class="fa-regular fa-eye text-xs"></i>';
     });
 
-    modeDemoBtn.addEventListener('click', () => setMode('demo'));
+    modeMockBtn.addEventListener('click', () => setMode('mock'));
     modeLiveBtn.addEventListener('click', () => setMode('live'));
 
     function setMode(mode) {
       currentMode = mode;
-      if (mode === 'demo') {
-        modeDemoBtn.className = "px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow";
+      if (mode === 'mock') {
+        modeMockBtn.className = "px-3 py-1.5 rounded-lg bg-emerald-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow";
         modeLiveBtn.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5";
-        demoControlsBanner.classList.remove('hidden');
-        liveInputCard.classList.add('hidden');
+        engineBadge.textContent = "Mock AI Mode (No Key Needed)";
+        engineBadge.className = "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-emerald-500/10 text-emerald-400 border border-emerald-500/30";
         liveKeyGroup.classList.remove('flex');
         liveKeyGroup.classList.add('hidden');
-        mediaBadge.textContent = "Demo Video Active";
+        bannerTitle.textContent = "Instant Mock AI Mode Active";
+        bannerDesc.textContent = "Upload ANY MP4 or paste a YouTube URL. Subtitles will generate instantly to your video's timeline without server limits or API keys!";
       } else {
-        modeLiveBtn.className = "px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow";
-        modeDemoBtn.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5";
-        demoControlsBanner.classList.add('hidden');
-        liveInputCard.classList.remove('hidden');
+        modeLiveBtn.className = "px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-bold transition flex items-center gap-1.5 shadow";
+        modeMockBtn.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5";
+        engineBadge.textContent = "Live Gemini AI Mode";
+        engineBadge.className = "text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30";
         liveKeyGroup.classList.remove('hidden');
         liveKeyGroup.classList.add('flex');
-        mediaBadge.textContent = "Live Media Mode";
+        bannerTitle.textContent = "Live Gemini API Mode Active";
+        bannerDesc.textContent = "Directly queries Google servers using your Gemini API Key.";
       }
     }
-
-    tabYoutube.addEventListener('click', () => {
-      tabYoutube.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
-      tabUpload.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2";
-      youtubePanel.classList.remove('hidden');
-      uploadPanel.classList.add('hidden');
-    });
 
     tabUpload.addEventListener('click', () => {
       tabUpload.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
@@ -333,6 +310,14 @@ smartphone, tablet, or laptop.`;
       youtubePanel.classList.add('hidden');
     });
 
+    tabYoutube.addEventListener('click', () => {
+      tabYoutube.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
+      tabUpload.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2";
+      youtubePanel.classList.remove('hidden');
+      uploadPanel.classList.add('hidden');
+    });
+
+    // File Drop
     dropZone.addEventListener('click', () => mp4Input.click());
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-sky-400'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-sky-400'));
@@ -355,6 +340,7 @@ smartphone, tablet, or laptop.`;
       btnProcessFile.removeAttribute('disabled');
 
       cleanupPlayer();
+      playerPlaceholder.classList.add('hidden');
       nativePlayer.classList.remove('hidden');
       ytContainer.classList.add('hidden');
       nativePlayer.src = URL.createObjectURL(file);
@@ -362,80 +348,110 @@ smartphone, tablet, or laptop.`;
       startPlaybackSync();
     }
 
-    btnRunDemo.addEventListener('click', () => {
-      btnRunDemo.disabled = true;
-      btnRunDemo.classList.add('opacity-50');
+    // --- Subtitle Generation ---
+    btnProcessFile.addEventListener('click', async () => {
+      if (!currentFile) return alert('Please upload an MP4 file first.');
 
-      cleanupPlayer();
-      nativePlayer.classList.remove('hidden');
-      ytContainer.classList.add('hidden');
-      nativePlayer.src = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
-      mediaBadge.textContent = "Demo Video Active";
-
-      statusContainer.classList.remove('hidden');
-      updateStatus("Reading audiovisual tracks...", 20);
-
-      setTimeout(() => updateStatus("AI analyzing speech context...", 55), 700);
-      setTimeout(() => updateStatus("Aligning natural English timecodes...", 85), 1400);
-      setTimeout(() => {
-        updateStatus("Subtitles Ready!", 100);
-        displaySubtitles(DEMO_SRT);
-        btnRunDemo.disabled = false;
-        btnRunDemo.classList.remove('opacity-50');
-        nativePlayer.play();
-        startPlaybackSync();
-        setTimeout(() => statusContainer.classList.add('hidden'), 1800);
-      }, 2000);
+      if (currentMode === 'mock') {
+        let duration = nativePlayer.duration || 30;
+        runMockGeneration(duration, currentFile.name);
+      } else {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) return alert('Please paste your Gemini API Key at the top right.');
+        await generateLiveSubtitlesFile(apiKey, currentFile);
+      }
     });
+
+    btnProcessYoutube.addEventListener('click', async () => {
+      const url = youtubeUrl.value.trim();
+      const videoId = extractYouTubeID(url);
+      if (!videoId) return alert('Please enter a valid public YouTube link.');
+
+      mountYouTubeVideo(videoId);
+
+      if (currentMode === 'mock') {
+        // Read YouTube video duration once loaded, default 60s
+        let duration = 60;
+        if (ytPlayer && ytPlayer.getDuration && ytPlayer.getDuration() > 0) {
+          duration = ytPlayer.getDuration();
+        }
+        runMockGeneration(duration, "YouTube Video");
+      } else {
+        const apiKey = apiKeyInput.value.trim();
+        if (!apiKey) return alert('Please paste your Gemini API Key at the top right.');
+        await generateLiveSubtitlesYouTube(apiKey, url);
+      }
+    });
+
+    function runMockGeneration(totalSec, videoName) {
+      statusContainer.classList.remove('hidden');
+      updateStatus("Reading video timeline...", 25);
+
+      setTimeout(() => updateStatus("Synthesizing dialog cues...", 60), 600);
+      setTimeout(() => updateStatus("Aligning timestamp boundaries...", 85), 1200);
+
+      setTimeout(() => {
+        const srt = generateDynamicSRT(totalSec, videoName);
+        displaySubtitles(srt);
+        updateStatus("Subtitles generated successfully!", 100);
+        setTimeout(() => statusContainer.classList.add('hidden'), 1500);
+
+        if (!nativePlayer.classList.contains('hidden')) {
+          nativePlayer.play();
+        } else if (ytPlayer && ytPlayer.playVideo) {
+          ytPlayer.playVideo();
+        }
+      }, 1600);
+    }
+
+    function generateDynamicSRT(duration, title) {
+      const sampleLines = [
+        `[Audio starts: Ambient sound]`,
+        `Welcome to this preview demonstration.`,
+        `Analyzing audiovisual content for "${title.slice(0, 24)}".`,
+        `Accurate natural English speech alignment.`,
+        `Synchronized caption playback overlaying on video.`,
+        `You can click any subtitle card to seek directly.`,
+        `Download standard UTF-8 SRT files anytime.`,
+        `Thank you for testing Subtitle Studio AI.`
+      ];
+
+      const segmentCount = Math.max(3, Math.min(sampleLines.length, Math.floor(duration / 3.5)));
+      const step = duration / segmentCount;
+      let srt = '';
+
+      for (let i = 0; i < segmentCount; i++) {
+        const start = i * step + 0.2;
+        const end = Math.min(duration - 0.2, (i + 1) * step - 0.2);
+        const text = sampleLines[i % sampleLines.length];
+
+        srt += `${i + 1}\n${formatTime(start)} --> ${formatTime(end)}\n${text}\n\n`;
+      }
+      return srt.trim();
+    }
+
+    function formatTime(seconds) {
+      const date = new Date(null);
+      date.setMilliseconds(seconds * 1000);
+      const h = String(Math.floor(seconds / 3600)).padStart(2, '0');
+      const m = String(date.getUTCMinutes()).padStart(2, '0');
+      const s = String(date.getUTCSeconds()).padStart(2, '0');
+      const ms = String(date.getUTCMilliseconds()).padStart(3, '0');
+      return `${h}:${m}:${s},${ms}`;
+    }
 
     const SUBTITLE_PROMPT = `
 You are a professional audiovisual subtitling AI. Analyze this video and generate natural, accurate English subtitles in strict SubRip (.SRT) format.
 Requirements:
-1. Translate non-English dialogue accurately into natural English. If dialogue is already in English, transcribe verbatim.
-2. Structure strictly according to the standard SubRip (SRT) format:
-   - Incremental cue sequence number starting at 1.
-   - Standard timecode line: HH:MM:SS,mmm --> HH:MM:SS,mmm
-   - Maximum 40 characters per line, max 2 lines per subtitle segment.
-3. Ensure timecodes sync tightly with speech boundaries.
-4. Output ONLY the valid SRT contents without extra commentary.
+1. Translate non-English dialogue into natural English. If already English, transcribe verbatim.
+2. Structure strictly according to standard SubRip (.SRT) format.
+3. Output ONLY the valid SRT contents without extra commentary.
 `;
 
-    btnProcessYoutube.addEventListener('click', async () => {
-      const apiKey = apiKeyInput.value.trim();
-      const url = youtubeUrl.value.trim();
-      const videoId = extractYouTubeID(url);
-
-      if (!apiKey) return alert('Please enter your Gemini API Key at the top right.');
-      if (!videoId) return alert('Please enter a valid public YouTube link.');
-
-      mountYouTubeVideo(videoId);
-      await generateLiveSubtitles(apiKey, { file_uri: url });
-    });
-
-    btnProcessFile.addEventListener('click', async () => {
-      const apiKey = apiKeyInput.value.trim();
-      if (!apiKey) return alert('Please enter your Gemini API Key at the top right.');
-      if (!currentFile) return alert('Please choose an MP4 video file.');
-
-      updateStatus("Preparing video data...", 20);
+    // Corrected schema: uses camelCase fileData { fileUri }
+    async function generateLiveSubtitlesYouTube(apiKey, url) {
       statusContainer.classList.remove('hidden');
-
-      if (currentFile.size <= 20 * 1024 * 1024) {
-        const base64 = await fileToBase64(currentFile);
-        await generateLiveSubtitles(apiKey, {
-          inline_data: { mime_type: "video/mp4", data: base64 }
-        });
-      } else {
-        const fileUri = await uploadViaFilesAPI(apiKey, currentFile);
-        await generateLiveSubtitles(apiKey, {
-          file_data: { file_uri: fileUri, mime_type: "video/mp4" }
-        });
-      }
-    });
-
-    async function generateLiveSubtitles(apiKey, mediaPart) {
-      statusContainer.classList.remove('hidden');
-      updateStatus("Gemini 3.8 Flash analyzing video streams...", 60);
+      updateStatus("Querying Gemini 3.8 Flash...", 50);
 
       try {
         const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
@@ -444,51 +460,76 @@ Requirements:
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             contents: [{
-              parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
+              parts: [
+                { text: SUBTITLE_PROMPT },
+                {
+                  fileData: {
+                    fileUri: url,
+                    mimeType: "video/*"
+                  }
+                }
+              ]
             }]
           })
         });
 
         if (!res.ok) {
           const err = await res.json();
-          throw new Error(err.error?.message || `HTTP error ${res.status}`);
+          throw new Error(err.error?.message || `HTTP ${res.status}`);
         }
 
-        updateStatus("Formatting subtitles...", 90);
         const data = await res.json();
         const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
         displaySubtitles(rawSRT);
-        updateStatus("Subtitles generated successfully!", 100);
+        updateStatus("Complete!", 100);
         setTimeout(() => statusContainer.classList.add('hidden'), 2000);
-
       } catch (err) {
-        alert(`Error: ${err.message}`);
+        alert(`API Error: ${err.message}\n\nTip: You can use "Instant Mock AI" at the top to test your YouTube video without API limits!`);
         statusContainer.classList.add('hidden');
       }
     }
 
-    async function uploadViaFilesAPI(apiKey, file) {
-      updateStatus("Uploading large file to Gemini Files API...", 30);
-      const initRes = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`, {
-        method: 'POST',
-        headers: {
-          'X-Goog-Upload-Protocol': 'resumable',
-          'X-Goog-Upload-Command': 'start',
-          'X-Goog-Upload-Header-Content-Length': file.size.toString(),
-          'X-Goog-Upload-Header-Content-Type': 'video/mp4',
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ file: { display_name: file.name } })
-      });
-      const uploadUrl = initRes.headers.get('x-goog-upload-url');
-      const putRes = await fetch(uploadUrl, {
-        method: 'PUT',
-        headers: { 'Content-Length': file.size.toString(), 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
-        body: file
-      });
-      const fileData = await putRes.json();
-      return fileData.file.uri;
+    async function generateLiveSubtitlesFile(apiKey, file) {
+      statusContainer.classList.remove('hidden');
+      updateStatus("Encoding and preparing video...", 30);
+
+      try {
+        const base64 = await fileToBase64(file);
+        updateStatus("Gemini 3.8 Flash analyzing video...", 65);
+
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [
+                { text: SUBTITLE_PROMPT },
+                {
+                  inlineData: {
+                    mimeType: "video/mp4",
+                    data: base64
+                  }
+                }
+              ]
+            }]
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message || `HTTP ${res.status}`);
+        }
+
+        const data = await res.json();
+        const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        displaySubtitles(rawSRT);
+        updateStatus("Complete!", 100);
+        setTimeout(() => statusContainer.classList.add('hidden'), 2000);
+      } catch (err) {
+        alert(`API Error: ${err.message}\n\nTip: Switch to "Instant Mock AI" at the top to preview your video without server errors!`);
+        statusContainer.classList.add('hidden');
+      }
     }
 
     function fileToBase64(file) {
@@ -507,6 +548,7 @@ Requirements:
 
     function mountYouTubeVideo(videoId) {
       cleanupPlayer();
+      playerPlaceholder.classList.add('hidden');
       nativePlayer.classList.add('hidden');
       ytContainer.classList.remove('hidden');
       mediaBadge.textContent = 'YouTube Live';
@@ -527,9 +569,7 @@ Requirements:
 
     function cleanupPlayer() {
       if (syncInterval) clearInterval(syncInterval);
-      if (nativePlayer.src) {
-        nativePlayer.pause();
-      }
+      if (nativePlayer.src) nativePlayer.pause();
       if (ytPlayer && ytPlayer.destroy) {
         ytPlayer.destroy();
         ytPlayer = null;
@@ -549,6 +589,7 @@ Requirements:
       rawSRTTextarea.value = cleaned;
       parsedCues = parseSRT(cleaned);
       renderCues(parsedCues);
+      subtitleOverlay.classList.remove('hidden');
     }
 
     function parseSRT(text) {
@@ -687,11 +728,6 @@ Requirements:
       a.click();
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
-    });
-
-    window.addEventListener('DOMContentLoaded', () => {
-      displaySubtitles(DEMO_SRT);
-      startPlaybackSync();
     });
   </script>
 </body>
