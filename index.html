@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Subtitle Studio AI — Preview & Interactive Demo</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- FontAwesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" />
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #0b1120; }
+    ::-webkit-scrollbar-thumb { background: #334155; border-radius: 4px; }
+    ::-webkit-scrollbar-thumb:hover { background: #475569; }
+    .cue-active { border-left-color: #38bdf8 !important; background-color: #1e293b !important; transform: translateX(2px); }
+  </style>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col">
+
+  <!-- Preview Banner for Coworkers -->
+  <div class="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 px-4 py-2 text-center text-xs font-medium text-white flex items-center justify-center gap-2 shadow-md">
+    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Team Preview</span>
+    <span>Ready to test without setup! Click <strong>"Try Interactive Demo"</strong> below or insert your Gemini Key for live videos.</span>
+  </div>
+
+  <!-- Header -->
+  <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
+    <div class="flex items-center space-x-3">
+      <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-sky-500 to-indigo-600 flex items-center justify-center shadow-lg shadow-sky-500/20">
+        <i class="fa-solid fa-closed-captioning text-white text-xl"></i>
+      </div>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
+            Subtitle Studio AI
+          </h1>
+          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 2.5</span>
+        </div>
+        <p class="text-xs text-slate-400">Intelligent video understanding & automated subtitle generation</p>
+      </div>
+    </div>
+
+    <!-- Mode Selector & API Key -->
+    <div class="flex flex-wrap items-center gap-3 text-xs">
+      <div class="flex bg-slate-800 p-1 rounded-xl border border-slate-700">
+        <button id="modeDemoBtn" class="px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow">
+          <i class="fa-solid fa-play text-[10px]"></i>
+          <span>Demo Mode</span>
+        </button>
+        <button id="modeLiveBtn" class="px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5">
+          <i class="fa-solid fa-bolt text-[10px]"></i>
+          <span>Live API Mode</span>
+        </button>
+      </div>
+
+      <div id="liveKeyGroup" class="relative hidden items-center">
+        <i class="fa-solid fa-key absolute left-3 text-slate-400 text-xs"></i>
+        <input
+          type="password"
+          id="apiKeyInput"
+          placeholder="Gemini API Key"
+          class="bg-slate-800 text-xs text-slate-200 pl-8 pr-8 py-2 rounded-lg border border-slate-700 focus:outline-none focus:border-sky-500 w-52 sm:w-60"
+        />
+        <button id="toggleKeyVisibility" class="absolute right-2.5 text-slate-400 hover:text-slate-200">
+          <i class="fa-regular fa-eye text-xs"></i>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Content -->
+  <main class="flex-1 max-w-7xl w-full mx-auto p-4 sm:p-6 flex flex-col gap-6">
+
+    <!-- Demo Action Bar (Shown in Demo Mode) -->
+    <div id="demoControlsBanner" class="bg-gradient-to-br from-slate-900 to-slate-900/90 border border-sky-500/40 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col sm:flex-row items-center justify-between gap-4">
+      <div class="flex items-center space-x-3">
+        <div class="w-9 h-9 rounded-lg bg-sky-500/20 text-sky-400 flex items-center justify-center text-lg">
+          <i class="fa-solid fa-sparkles"></i>
+        </div>
+        <div>
+          <h2 class="text-sm font-semibold text-slate-100">Ready-to-test Demo Video pre-configured</h2>
+          <p class="text-xs text-slate-400">Simulates Gemini 2.5's video analysis with instant cue generation and interactive playback sync.</p>
+        </div>
+      </div>
+      <button id="btnRunDemo" class="w-full sm:w-auto bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 active:scale-95 text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center space-x-2 text-xs">
+        <i class="fa-solid fa-wand-magic-sparkles text-sm"></i>
+        <span>Run Demo Subtitle Generation</span>
+      </button>
+    </div>
+
+    <!-- Live Input Card (Shown in Live Mode) -->
+    <div id="liveInputCard" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-6 shadow-xl">
+      <div class="flex border-b border-slate-800 mb-6 space-x-6 text-sm font-medium">
+        <button id="tabYoutube" class="pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2">
+          <i class="fa-brands fa-youtube text-red-500 text-base"></i>
+          <span>Public YouTube Video</span>
+        </button>
+        <button id="tabUpload" class="pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2">
+          <i class="fa-solid fa-file-video text-sky-400 text-base"></i>
+          <span>Upload Local MP4</span>
+        </button>
+      </div>
+
+      <!-- YouTube Tab -->
+      <div id="youtubePanel" class="space-y-4">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-link absolute left-3.5 top-3.5 text-slate-500 text-xs"></i>
+            <input
+              type="text"
+              id="youtubeUrl"
+              placeholder="https://www.youtube.com/watch?v=..."
+              class="w-full bg-slate-950 border border-slate-700 rounded-xl pl-10 pr-4 py-2.5 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-sky-500"
+            />
+          </div>
+          <button id="btnProcessYoutube" class="bg-sky-500 hover:bg-sky-400 text-slate-950 font-semibold px-6 py-2.5 rounded-xl text-xs flex items-center justify-center space-x-2 transition">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Generate Subtitles</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Upload Tab -->
+      <div id="uploadPanel" class="hidden space-y-4">
+        <div id="dropZone" class="border-2 border-dashed border-slate-700 hover:border-sky-500 rounded-xl p-8 text-center cursor-pointer transition bg-slate-950/50">
+          <input type="file" id="mp4Input" accept="video/mp4" class="hidden" />
+          <i class="fa-solid fa-cloud-arrow-up text-3xl text-sky-400 mb-2"></i>
+          <p class="text-xs font-medium text-slate-200">Click to upload or drag & drop an MP4 video</p>
+          <p class="text-[11px] text-slate-500 mt-1" id="fileInfoText">Files up to 2GB supported via Gemini Files API</p>
+        </div>
+        <div class="flex justify-end">
+          <button id="btnProcessFile" disabled class="bg-sky-500 hover:bg-sky-400 disabled:opacity-40 disabled:cursor-not-allowed font-semibold px-6 py-2 rounded-xl text-slate-950 text-xs flex items-center space-x-2">
+            <i class="fa-solid fa-wand-magic-sparkles"></i>
+            <span>Generate Subtitles</span>
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status & Progress Indicator -->
+    <div id="statusContainer" class="hidden bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-lg">
+      <div class="flex items-center justify-between text-xs mb-2">
+        <span id="statusMessage" class="text-slate-300 font-medium flex items-center gap-2">
+          <i class="fa-solid fa-circle-notch fa-spin text-sky-400"></i>
+          Initializing Gemini 2.5 video engine...
+        </span>
+        <span id="statusPercent" class="text-sky-400 font-mono font-semibold">0%</span>
+      </div>
+      <div class="w-full bg-slate-800 rounded-full h-2 overflow-hidden">
+        <div id="progressBar" class="bg-gradient-to-r from-sky-400 via-indigo-500 to-purple-500 h-2 w-0 transition-all duration-300"></div>
+      </div>
+    </div>
+
+    <!-- Workspace: Dual Column Player & Subtitles -->
+    <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 flex-1 items-start">
+
+      <!-- Left Column: Media Player -->
+      <div class="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col">
+        <div class="flex items-center justify-between mb-3">
+          <h3 class="text-xs font-bold uppercase tracking-wider text-slate-400 flex items-center gap-2">
+            <i class="fa-solid fa-film text-sky-400"></i> Video Preview
+          </h3>
+          <span id="mediaBadge" class="text-[10px] font-mono uppercase px-2 py-0.5 rounded bg-sky-500/10 text-sky-400 border border-sky-500/20">Demo Video Active</span>
+        </div>
+
+        <div class="relative w-full aspect-video bg-black rounded-xl overflow-hidden border border-slate-800 flex items-center justify-center group">
+          <video id="nativePlayer" class="w-full h-full object-contain" controls playsinline>
+            <source src="https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4" type="video/mp4" />
+          </video>
+          <div id="ytContainer" class="w-full h-full hidden"></div>
+
+          <!-- Dynamic On-Video Subtitle Overlay -->
+          <div id="subtitleOverlay" class="absolute bottom-12 left-4 right-4 text-center pointer-events-none transition-opacity duration-150">
+            <span id="subtitleOverlayText" class="inline-block bg-black/85 text-yellow-300 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-semibold shadow-lg backdrop-blur-sm border border-black/40"></span>
+          </div>
+        </div>
+        <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-info text-sky-400"></i>
+          Clicking any subtitle card on the right will seek the video directly to that timestamp.
+        </p>
+      </div>
+
+      <!-- Right Column: Subtitle Studio -->
+      <div class="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-[540px]">
+        
+        <!-- Action Toolbar -->
+        <div class="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-slate-800 pb-3">
+          <div class="flex space-x-1.5">
+            <button id="viewListTab" class="text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 font-medium transition">
+              <i class="fa-solid fa-list-ul mr-1"></i> Interactive Cues
+            </button>
+            <button id="viewRawTab" class="text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 border border-slate-800 font-medium transition">
+              <i class="fa-solid fa-code mr-1"></i> Raw SRT
+            </button>
+          </div>
+
+          <div class="flex items-center space-x-2">
+            <button id="btnCopySRT" class="bg-slate-800 hover:bg-slate-700 active:scale-95 text-slate-200 text-xs px-3 py-1.5 rounded-lg border border-slate-700 transition flex items-center gap-1.5">
+              <i class="fa-regular fa-copy"></i>
+              <span>Copy</span>
+            </button>
+            <button id="btnDownloadSRT" class="bg-emerald-500 hover:bg-emerald-400 active:scale-95 text-slate-950 text-xs font-bold px-3 py-1.5 rounded-lg shadow-lg shadow-emerald-500/20 transition flex items-center gap-1.5">
+              <i class="fa-solid fa-download"></i>
+              <span>Download SRT</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Cues List View -->
+        <div id="cuesListView" class="flex-1 overflow-y-auto space-y-2 pr-1">
+          <!-- Populated by JavaScript -->
+        </div>
+
+        <!-- Raw Text View -->
+        <div id="rawSRTView" class="hidden flex-1 flex flex-col">
+          <textarea
+            id="rawSRTTextarea"
+            spellcheck="false"
+            class="flex-1 w-full bg-slate-950 border border-slate-800 rounded-xl p-3 font-mono text-xs text-slate-300 resize-none focus:outline-none focus:border-sky-500 leading-relaxed"
+            placeholder="SRT contents will be available here..."
+          ></textarea>
+        </div>
+      </div>
+
+    </div>
+  </main>
+
+  <script src="https://www.youtube.com/iframe_api"></script>
+  <script>
+    // --- Sample Pre-computed SRT for Demo Mode ---
+    const DEMO_SRT = `1
+00:00:00,500 --> 00:00:03,100
+[Upbeat electronic intro music]
+
+2
+00:00:03,400 --> 00:00:05,900
+Introducing Chromecast.
+
+3
+00:00:06,100 --> 00:00:08,800
+The easiest way to enjoy online video
+and music on your TV.
+
+4
+00:00:09,100 --> 00:00:11,500
+For 35 dollars, plug it into
+any high-definition TV.
+
+5
+00:00:11,700 --> 00:00:14,200
+And control it with your existing
+smartphone, tablet, or laptop.`;
+
+    // --- State Variables ---
+    let currentMode = 'demo'; // 'demo' or 'live'
+    let currentFile = null;
+    let ytPlayer = null;
+    let parsedCues = [];
+    let syncInterval = null;
+
+    // --- DOM Elements ---
+    const modeDemoBtn = document.getElementById('modeDemoBtn');
+    const modeLiveBtn = document.getElementById('modeLiveBtn');
+    const demoControlsBanner = document.getElementById('demoControlsBanner');
+    const liveInputCard = document.getElementById('liveInputCard');
+    const liveKeyGroup = document.getElementById('liveKeyGroup');
+    const apiKeyInput = document.getElementById('apiKeyInput');
+    const toggleKeyVisibility = document.getElementById('toggleKeyVisibility');
+
+    const btnRunDemo = document.getElementById('btnRunDemo');
+    const tabYoutube = document.getElementById('tabYoutube');
+    const tabUpload = document.getElementById('tabUpload');
+    const youtubePanel = document.getElementById('youtubePanel');
+    const uploadPanel = document.getElementById('uploadPanel');
+    const youtubeUrl = document.getElementById('youtubeUrl');
+    const btnProcessYoutube = document.getElementById('btnProcessYoutube');
+    const dropZone = document.getElementById('dropZone');
+    const mp4Input = document.getElementById('mp4Input');
+    const fileInfoText = document.getElementById('fileInfoText');
+    const btnProcessFile = document.getElementById('btnProcessFile');
+
+    const statusContainer = document.getElementById('statusContainer');
+    const statusMessage = document.getElementById('statusMessage');
+    const statusPercent = document.getElementById('statusPercent');
+    const progressBar = document.getElementById('progressBar');
+
+    const nativePlayer = document.getElementById('nativePlayer');
+    const ytContainer = document.getElementById('ytContainer');
+    const mediaBadge = document.getElementById('mediaBadge');
+    const subtitleOverlay = document.getElementById('subtitleOverlay');
+    const subtitleOverlayText = document.getElementById('subtitleOverlayText');
+
+    const viewListTab = document.getElementById('viewListTab');
+    const viewRawTab = document.getElementById('viewRawTab');
+    const cuesListView = document.getElementById('cuesListView');
+    const rawSRTView = document.getElementById('rawSRTView');
+    const rawSRTTextarea = document.getElementById('rawSRTTextarea');
+
+    const btnCopySRT = document.getElementById('btnCopySRT');
+    const btnDownloadSRT = document.getElementById('btnDownloadSRT');
+
+    // Restore saved API Key
+    const savedKey = localStorage.getItem('GEMINI_API_KEY');
+    if (savedKey) apiKeyInput.value = savedKey;
+    apiKeyInput.addEventListener('input', () => localStorage.setItem('GEMINI_API_KEY', apiKeyInput.value.trim()));
+
+    toggleKeyVisibility.addEventListener('click', () => {
+      const isPassword = apiKeyInput.type === 'password';
+      apiKeyInput.type = isPassword ? 'text' : 'password';
+      toggleKeyVisibility.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash text-xs"></i>' : '<i class="fa-regular fa-eye text-xs"></i>';
+    });
+
+    // --- Mode Switching ---
+    modeDemoBtn.addEventListener('click', () => setMode('demo'));
+    modeLiveBtn.addEventListener('click', () => setMode('live'));
+
+    function setMode(mode) {
+      currentMode = mode;
+      if (mode === 'demo') {
+        modeDemoBtn.className = "px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow";
+        modeLiveBtn.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5";
+        demoControlsBanner.classList.remove('hidden');
+        liveInputCard.classList.add('hidden');
+        liveKeyGroup.classList.remove('flex');
+        liveKeyGroup.classList.add('hidden');
+        mediaBadge.textContent = "Demo Video Active";
+      } else {
+        modeLiveBtn.className = "px-3 py-1.5 rounded-lg bg-sky-500 text-slate-950 font-semibold transition flex items-center gap-1.5 shadow";
+        modeDemoBtn.className = "px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 font-medium transition flex items-center gap-1.5";
+        demoControlsBanner.classList.add('hidden');
+        liveInputCard.classList.remove('hidden');
+        liveKeyGroup.classList.remove('hidden');
+        liveKeyGroup.classList.add('flex');
+        mediaBadge.textContent = "Live Media Mode";
+      }
+    }
+
+    // --- Tab Switching for Live Mode ---
+    tabYoutube.addEventListener('click', () => {
+      tabYoutube.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
+      tabUpload.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2";
+      youtubePanel.classList.remove('hidden');
+      uploadPanel.classList.add('hidden');
+    });
+
+    tabUpload.addEventListener('click', () => {
+      tabUpload.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
+      tabYoutube.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2";
+      uploadPanel.classList.remove('hidden');
+      youtubePanel.classList.add('hidden');
+    });
+
+    // --- File Drag & Drop ---
+    dropZone.addEventListener('click', () => mp4Input.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-sky-400'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-sky-400'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-sky-400');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+    mp4Input.addEventListener('change', () => {
+      if (mp4Input.files.length) handleFile(mp4Input.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file.name.toLowerCase().endsWith('.mp4') && file.type !== 'video/mp4') {
+        return alert('Please select a valid .mp4 video file.');
+      }
+      currentFile = file;
+      fileInfoText.textContent = `Selected: ${file.name} (${(file.size / (1024 * 1024)).toFixed(1)} MB)`;
+      fileInfoText.classList.add('text-sky-400');
+      btnProcessFile.removeAttribute('disabled');
+
+      // Mount into player
+      cleanupPlayer();
+      nativePlayer.classList.remove('hidden');
+      ytContainer.classList.add('hidden');
+      nativePlayer.src = URL.createObjectURL(file);
+      mediaBadge.textContent = 'Custom MP4';
+      startPlaybackSync();
+    }
+
+    // --- Demo Subtitle Simulation ---
+    btnRunDemo.addEventListener('click', () => {
+      btnRunDemo.disabled = true;
+      btnRunDemo.classList.add('opacity-50');
+
+      // Make sure demo video is loaded and ready
+      cleanupPlayer();
+      nativePlayer.classList.remove('hidden');
+      ytContainer.classList.add('hidden');
+      nativePlayer.src = "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4";
+      mediaBadge.textContent = "Demo Video Active";
+
+      statusContainer.classList.remove('hidden');
+      updateStatus("Reading audiovisual tracks...", 20);
+
+      setTimeout(() => updateStatus("Gemini 2.5 analyzing speech context...", 55), 700);
+      setTimeout(() => updateStatus("Aligning natural English timecodes...", 85), 1400);
+      setTimeout(() => {
+        updateStatus("Subtitles Ready!", 100);
+        displaySubtitles(DEMO_SRT);
+        btnRunDemo.disabled = false;
+        btnRunDemo.classList.remove('opacity-50');
+        nativePlayer.play();
+        startPlaybackSync();
+        setTimeout(() => statusContainer.classList.add('hidden'), 1800);
+      }, 2000);
+    });
+
+    // --- Live Mode Gemini Generation ---
+    const SUBTITLE_PROMPT = `
+You are a professional audiovisual subtitling AI. Analyze this video and generate natural, accurate English subtitles in strict SubRip (.SRT) format.
+Requirements:
+1. Translate non-English dialogue accurately into natural English. If dialogue is already in English, transcribe verbatim.
+2. Structure strictly according to the standard SubRip (SRT) format:
+   - Incremental cue sequence number starting at 1.
+   - Standard timecode line: HH:MM:SS,mmm --> HH:MM:SS,mmm
+   - Maximum 40 characters per line, max 2 lines per subtitle segment.
+3. Ensure timecodes sync tightly with speech boundaries.
+4. Output ONLY the valid SRT contents without extra commentary.
+`;
+
+    btnProcessYoutube.addEventListener('click', async () => {
+      const apiKey = apiKeyInput.value.trim();
+      const url = youtubeUrl.value.trim();
+      const videoId = extractYouTubeID(url);
+
+      if (!apiKey) return alert('Please enter your Gemini API Key at the top right.');
+      if (!videoId) return alert('Please enter a valid public YouTube link.');
+
+      mountYouTubeVideo(videoId);
+      await generateLiveSubtitles(apiKey, { file_uri: url });
+    });
+
+    btnProcessFile.addEventListener('click', async () => {
+      const apiKey = apiKeyInput.value.trim();
+      if (!apiKey) return alert('Please enter your Gemini API Key at the top right.');
+      if (!currentFile) return alert('Please choose an MP4 video file.');
+
+      updateStatus("Preparing video data...", 20);
+      statusContainer.classList.remove('hidden');
+
+      if (currentFile.size <= 20 * 1024 * 1024) {
+        const base64 = await fileToBase64(currentFile);
+        await generateLiveSubtitles(apiKey, {
+          inline_data: { mime_type: "video/mp4", data: base64 }
+        });
+      } else {
+        const fileUri = await uploadViaFilesAPI(apiKey, currentFile);
+        await generateLiveSubtitles(apiKey, {
+          file_data: { file_uri: fileUri, mime_type: "video/mp4" }
+        });
+      }
+    });
+
+    async function generateLiveSubtitles(apiKey, mediaPart) {
+      statusContainer.classList.remove('hidden');
+      updateStatus("Gemini 2.5 analyzing video streams...", 60);
+
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
+            }],
+            generationConfig: { temperature: 0.1 }
+          })
+        });
+
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message || `HTTP error ${res.status}`);
+        }
+
+        updateStatus("Formatting subtitles...", 90);
+        const data = await res.json();
+        const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        displaySubtitles(rawSRT);
+        updateStatus("Subtitles generated successfully!", 100);
+        setTimeout(() => statusContainer.classList.add('hidden'), 2000);
+
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+        statusContainer.classList.add('hidden');
+      }
+    }
+
+    async function uploadViaFilesAPI(apiKey, file) {
+      updateStatus("Uploading large file to Gemini Files API...", 30);
+      const initRes = await fetch(`https://generativelanguage.googleapis.com/upload/v1beta/files?key=${apiKey}`, {
+        method: 'POST',
+        headers: {
+          'X-Goog-Upload-Protocol': 'resumable',
+          'X-Goog-Upload-Command': 'start',
+          'X-Goog-Upload-Header-Content-Length': file.size.toString(),
+          'X-Goog-Upload-Header-Content-Type': 'video/mp4',
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ file: { display_name: file.name } })
+      });
+      const uploadUrl = initRes.headers.get('x-goog-upload-url');
+      const putRes = await fetch(uploadUrl, {
+        method: 'PUT',
+        headers: { 'Content-Length': file.size.toString(), 'X-Goog-Upload-Offset': '0', 'X-Goog-Upload-Command': 'upload, finalize' },
+        body: file
+      });
+      const fileData = await putRes.json();
+      return fileData.file.uri;
+    }
+
+    function fileToBase64(file) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(file);
+      });
+    }
+
+    function extractYouTubeID(url) {
+      const match = url.match(/^.*(youtu.be\/|v\/|u\/\w\/|embed\/|watch\?v=|&v=)([^#&?]*).*/);
+      return (match && match[2].length === 11) ? match[2] : null;
+    }
+
+    function mountYouTubeVideo(videoId) {
+      cleanupPlayer();
+      nativePlayer.classList.add('hidden');
+      ytContainer.classList.remove('hidden');
+      mediaBadge.textContent = 'YouTube Live';
+
+      if (window.YT && window.YT.Player) {
+        ytContainer.innerHTML = '<div id="ytPlayerFrame"></div>';
+        ytPlayer = new YT.Player('ytPlayerFrame', {
+          height: '100%',
+          width: '100%',
+          videoId: videoId,
+          playerVars: { playsinline: 1, rel: 0 },
+          events: { onReady: () => startPlaybackSync() }
+        });
+      } else {
+        ytContainer.innerHTML = `<iframe class="w-full h-full" src="https://www.youtube.com/embed/${videoId}?enablejsapi=1" frameborder="0" allowfullscreen></iframe>`;
+      }
+    }
+
+    function cleanupPlayer() {
+      if (syncInterval) clearInterval(syncInterval);
+      if (nativePlayer.src) {
+        nativePlayer.pause();
+      }
+      if (ytPlayer && ytPlayer.destroy) {
+        ytPlayer.destroy();
+        ytPlayer = null;
+      }
+      ytContainer.innerHTML = '';
+      subtitleOverlay.classList.add('hidden');
+    }
+
+    function updateStatus(msg, percent) {
+      statusMessage.innerHTML = `<i class="fa-solid fa-circle-notch fa-spin text-sky-400"></i> ${msg}`;
+      statusPercent.textContent = `${percent}%`;
+      progressBar.style.width = `${percent}%`;
+    }
+
+    // --- Subtitle Parsing & Syncing ---
+    function displaySubtitles(rawText) {
+      const cleaned = rawText.replace(/^```(srt)?\s*/i, '').replace(/```$/i, '').trim();
+      rawSRTTextarea.value = cleaned;
+      parsedCues = parseSRT(cleaned);
+      renderCues(parsedCues);
+    }
+
+    function parseSRT(text) {
+      const blocks = text.replace(/\r\n/g, '\n').replace(/\r/g, '\n').split(/\n\n+/);
+      const cues = [];
+
+      blocks.forEach(block => {
+        const lines = block.split('\n');
+        if (lines.length >= 2) {
+          const timeLine = lines[0].includes('-->') ? lines[0] : lines[1];
+          const textLines = lines[0].includes('-->') ? lines.slice(1) : lines.slice(2);
+          const match = timeLine.match(/(\d{2}:\d{2}:\d{2}[,\.]\d{3})\s*-->\s*(\d{2}:\d{2}:\d{2}[,\.]\d{3})/);
+          if (match) {
+            cues.push({
+              index: cues.length + 1,
+              startStr: match[1],
+              endStr: match[2],
+              startSec: timeToSeconds(match[1]),
+              endSec: timeToSeconds(match[2]),
+              text: textLines.join('\n').trim()
+            });
+          }
+        }
+      });
+      return cues;
+    }
+
+    function timeToSeconds(str) {
+      const [h, m, s] = str.replace(',', '.').split(':');
+      return parseFloat(h) * 3600 + parseFloat(m) * 60 + parseFloat(s);
+    }
+
+    function renderCues(cues) {
+      if (!cues.length) {
+        cuesListView.innerHTML = '<div class="text-center text-slate-500 py-10 text-xs">No cues found.</div>';
+        return;
+      }
+
+      cuesListView.innerHTML = cues.map((cue, idx) => `
+        <div
+          data-cue-idx="${idx}"
+          class="cue-item p-3 bg-slate-950/70 border-l-4 border-slate-700 hover:border-sky-400 rounded-r-xl transition cursor-pointer text-xs"
+          onclick="seekTo(${cue.startSec})"
+        >
+          <div class="flex items-center justify-between text-[11px] font-mono text-slate-400 mb-1">
+            <span class="font-bold text-sky-400">#${cue.index}</span>
+            <span>${cue.startStr} &rarr; ${cue.endStr}</span>
+          </div>
+          <div class="text-slate-200 leading-relaxed whitespace-pre-wrap">${cue.text}</div>
+        </div>
+      `).join('');
+    }
+
+    window.seekTo = function(seconds) {
+      if (!nativePlayer.classList.contains('hidden')) {
+        nativePlayer.currentTime = seconds;
+        nativePlayer.play();
+      } else if (ytPlayer && ytPlayer.seekTo) {
+        ytPlayer.seekTo(seconds, true);
+        ytPlayer.playVideo();
+      }
+    };
+
+    function startPlaybackSync() {
+      if (syncInterval) clearInterval(syncInterval);
+      syncInterval = setInterval(() => {
+        let currentTime = -1;
+        if (!nativePlayer.classList.contains('hidden')) {
+          currentTime = nativePlayer.currentTime;
+        } else if (ytPlayer && ytPlayer.getCurrentTime) {
+          currentTime = ytPlayer.getCurrentTime();
+        }
+
+        if (currentTime < 0 || !parsedCues.length) return;
+
+        const activeIdx = parsedCues.findIndex(c => currentTime >= c.startSec && currentTime <= c.endSec);
+
+        document.querySelectorAll('.cue-item').forEach((el, idx) => {
+          if (idx === activeIdx) {
+            if (!el.classList.contains('cue-active')) {
+              el.classList.add('cue-active');
+              el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+          } else {
+            el.classList.remove('cue-active');
+          }
+        });
+
+        if (activeIdx !== -1) {
+          subtitleOverlayText.textContent = parsedCues[activeIdx].text;
+          subtitleOverlay.classList.remove('hidden');
+        } else {
+          subtitleOverlay.classList.add('hidden');
+        }
+      }, 200);
+    }
+
+    // --- Tab Views ---
+    viewListTab.addEventListener('click', () => {
+      viewListTab.className = "text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 font-medium transition";
+      viewRawTab.className = "text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 border border-slate-800 font-medium transition";
+      cuesListView.classList.remove('hidden');
+      rawSRTView.classList.add('hidden');
+    });
+
+    viewRawTab.addEventListener('click', () => {
+      viewRawTab.className = "text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 font-medium transition";
+      viewListTab.className = "text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 border border-slate-800 font-medium transition";
+      rawSRTView.classList.remove('hidden');
+      cuesListView.classList.add('hidden');
+    });
+
+    rawSRTTextarea.addEventListener('input', () => {
+      parsedCues = parseSRT(rawSRTTextarea.value);
+      renderCues(parsedCues);
+    });
+
+    // --- Export Handlers ---
+    btnCopySRT.addEventListener('click', () => {
+      const text = rawSRTTextarea.value.trim();
+      if (!text) return alert('No subtitles available.');
+      navigator.clipboard.writeText(text).then(() => {
+        const prev = btnCopySRT.innerHTML;
+        btnCopySRT.innerHTML = '<i class="fa-solid fa-check text-emerald-400"></i> Copied!';
+        setTimeout(() => btnCopySRT.innerHTML = prev, 1800);
+      });
+    });
+
+    btnDownloadSRT.addEventListener('click', () => {
+      const text = rawSRTTextarea.value.trim();
+      if (!text) return alert('No subtitles available to download.');
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `subtitles_${Date.now()}.srt`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+
+    // Auto-load demo on first visit
+    window.addEventListener('DOMContentLoaded', () => {
+      displaySubtitles(DEMO_SRT);
+      startPlaybackSync();
+    });
+  </script>
+</body>
+</html>
