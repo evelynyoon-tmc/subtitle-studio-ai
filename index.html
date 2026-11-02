@@ -21,7 +21,7 @@
   <!-- Preview Banner for Coworkers -->
   <div class="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 px-4 py-2 text-center text-xs font-medium text-white flex items-center justify-center gap-2 shadow-md">
     <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Team Preview</span>
-    <span>Ready to test without setup! Click <strong>"Try Interactive Demo"</strong> below or insert your Gemini Key for live videos.</span>
+    <span>Ready to test! Use <strong>"Demo Mode"</strong> without an API key or switch to <strong>Live Mode</strong> with your Gemini key.</span>
   </div>
 
   <!-- Header -->
@@ -35,7 +35,7 @@
           <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
             Subtitle Studio AI
           </h1>
-          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 2.5</span>
+          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 3.8</span>
         </div>
         <p class="text-xs text-slate-400">Intelligent video understanding & automated subtitle generation</p>
       </div>
@@ -80,7 +80,7 @@
         </div>
         <div>
           <h2 class="text-sm font-semibold text-slate-100">Ready-to-test Demo Video pre-configured</h2>
-          <p class="text-xs text-slate-400">Simulates Gemini 2.5's video analysis with instant cue generation and interactive playback sync.</p>
+          <p class="text-xs text-slate-400">Simulates video analysis with instant cue generation and interactive playback sync.</p>
         </div>
       </div>
       <button id="btnRunDemo" class="w-full sm:w-auto bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 active:scale-95 text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center space-x-2 text-xs">
@@ -143,7 +143,7 @@
       <div class="flex items-center justify-between text-xs mb-2">
         <span id="statusMessage" class="text-slate-300 font-medium flex items-center gap-2">
           <i class="fa-solid fa-circle-notch fa-spin text-sky-400"></i>
-          Initializing Gemini 2.5 video engine...
+          Initializing Gemini 3.8 video engine...
         </span>
         <span id="statusPercent" class="text-sky-400 font-mono font-semibold">0%</span>
       </div>
@@ -170,21 +170,19 @@
           </video>
           <div id="ytContainer" class="w-full h-full hidden"></div>
 
-          <!-- Dynamic On-Video Subtitle Overlay -->
+          <!-- Subtitle Overlay -->
           <div id="subtitleOverlay" class="absolute bottom-12 left-4 right-4 text-center pointer-events-none transition-opacity duration-150">
             <span id="subtitleOverlayText" class="inline-block bg-black/85 text-yellow-300 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-semibold shadow-lg backdrop-blur-sm border border-black/40"></span>
           </div>
         </div>
         <p class="text-[11px] text-slate-500 mt-2 flex items-center gap-1.5">
           <i class="fa-solid fa-circle-info text-sky-400"></i>
-          Clicking any subtitle card on the right will seek the video directly to that timestamp.
+          Clicking any subtitle card seeks the video directly to that timestamp.
         </p>
       </div>
 
       <!-- Right Column: Subtitle Studio -->
       <div class="lg:col-span-6 bg-slate-900 border border-slate-800 rounded-2xl p-4 sm:p-5 shadow-xl flex flex-col h-[540px]">
-        
-        <!-- Action Toolbar -->
         <div class="flex flex-wrap items-center justify-between gap-2 mb-4 border-b border-slate-800 pb-3">
           <div class="flex space-x-1.5">
             <button id="viewListTab" class="text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 font-medium transition">
@@ -207,12 +205,8 @@
           </div>
         </div>
 
-        <!-- Cues List View -->
-        <div id="cuesListView" class="flex-1 overflow-y-auto space-y-2 pr-1">
-          <!-- Populated by JavaScript -->
-        </div>
+        <div id="cuesListView" class="flex-1 overflow-y-auto space-y-2 pr-1"></div>
 
-        <!-- Raw Text View -->
         <div id="rawSRTView" class="hidden flex-1 flex flex-col">
           <textarea
             id="rawSRTTextarea"
@@ -228,7 +222,6 @@
 
   <script src="https://www.youtube.com/iframe_api"></script>
   <script>
-    // --- Sample Pre-computed SRT for Demo Mode ---
     const DEMO_SRT = `1
 00:00:00,500 --> 00:00:03,100
 [Upbeat electronic intro music]
@@ -252,14 +245,12 @@ any high-definition TV.
 And control it with your existing
 smartphone, tablet, or laptop.`;
 
-    // --- State Variables ---
-    let currentMode = 'demo'; // 'demo' or 'live'
+    let currentMode = 'demo';
     let currentFile = null;
     let ytPlayer = null;
     let parsedCues = [];
     let syncInterval = null;
 
-    // --- DOM Elements ---
     const modeDemoBtn = document.getElementById('modeDemoBtn');
     const modeLiveBtn = document.getElementById('modeLiveBtn');
     const demoControlsBanner = document.getElementById('demoControlsBanner');
@@ -300,7 +291,6 @@ smartphone, tablet, or laptop.`;
     const btnCopySRT = document.getElementById('btnCopySRT');
     const btnDownloadSRT = document.getElementById('btnDownloadSRT');
 
-    // Restore saved API Key
     const savedKey = localStorage.getItem('GEMINI_API_KEY');
     if (savedKey) apiKeyInput.value = savedKey;
     apiKeyInput.addEventListener('input', () => localStorage.setItem('GEMINI_API_KEY', apiKeyInput.value.trim()));
@@ -311,7 +301,6 @@ smartphone, tablet, or laptop.`;
       toggleKeyVisibility.innerHTML = isPassword ? '<i class="fa-regular fa-eye-slash text-xs"></i>' : '<i class="fa-regular fa-eye text-xs"></i>';
     });
 
-    // --- Mode Switching ---
     modeDemoBtn.addEventListener('click', () => setMode('demo'));
     modeLiveBtn.addEventListener('click', () => setMode('live'));
 
@@ -336,7 +325,6 @@ smartphone, tablet, or laptop.`;
       }
     }
 
-    // --- Tab Switching for Live Mode ---
     tabYoutube.addEventListener('click', () => {
       tabYoutube.className = "pb-3 border-b-2 border-sky-500 text-sky-400 flex items-center space-x-2";
       tabUpload.className = "pb-3 border-b-2 border-transparent text-slate-400 hover:text-slate-200 flex items-center space-x-2";
@@ -351,7 +339,6 @@ smartphone, tablet, or laptop.`;
       youtubePanel.classList.add('hidden');
     });
 
-    // --- File Drag & Drop ---
     dropZone.addEventListener('click', () => mp4Input.click());
     dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-sky-400'); });
     dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-sky-400'));
@@ -373,7 +360,6 @@ smartphone, tablet, or laptop.`;
       fileInfoText.classList.add('text-sky-400');
       btnProcessFile.removeAttribute('disabled');
 
-      // Mount into player
       cleanupPlayer();
       nativePlayer.classList.remove('hidden');
       ytContainer.classList.add('hidden');
@@ -382,12 +368,10 @@ smartphone, tablet, or laptop.`;
       startPlaybackSync();
     }
 
-    // --- Demo Subtitle Simulation ---
     btnRunDemo.addEventListener('click', () => {
       btnRunDemo.disabled = true;
       btnRunDemo.classList.add('opacity-50');
 
-      // Make sure demo video is loaded and ready
       cleanupPlayer();
       nativePlayer.classList.remove('hidden');
       ytContainer.classList.add('hidden');
@@ -397,7 +381,7 @@ smartphone, tablet, or laptop.`;
       statusContainer.classList.remove('hidden');
       updateStatus("Reading audiovisual tracks...", 20);
 
-      setTimeout(() => updateStatus("Gemini 2.5 analyzing speech context...", 55), 700);
+      setTimeout(() => updateStatus("AI analyzing speech context...", 55), 700);
       setTimeout(() => updateStatus("Aligning natural English timecodes...", 85), 1400);
       setTimeout(() => {
         updateStatus("Subtitles Ready!", 100);
@@ -410,7 +394,6 @@ smartphone, tablet, or laptop.`;
       }, 2000);
     });
 
-    // --- Live Mode Gemini Generation ---
     const SUBTITLE_PROMPT = `
 You are a professional audiovisual subtitling AI. Analyze this video and generate natural, accurate English subtitles in strict SubRip (.SRT) format.
 Requirements:
@@ -458,38 +441,49 @@ Requirements:
 
     async function generateLiveSubtitles(apiKey, mediaPart) {
       statusContainer.classList.remove('hidden');
-      updateStatus("Gemini 2.5 analyzing video streams...", 60);
+      updateStatus("Gemini 3.8 analyzing video streams...", 60);
 
-      try {
-        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            contents: [{
-              parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
-            }],
-            generationConfig: { temperature: 0.1 }
-          })
-        });
+      // Uses gemini-3.8-flash for modern Google AI Studio keys
+      const modelsToTry = ['gemini-3.8-flash', 'gemini-2.5-flash'];
+      let lastError = null;
 
-        if (!res.ok) {
-          const err = await res.json();
-          throw new Error(err.error?.message || `HTTP error ${res.status}`);
+      for (const model of modelsToTry) {
+        try {
+          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+          const res = await fetch(endpoint, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
+              }]
+            })
+          });
+
+          if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.error?.message || `HTTP error ${res.status}`);
+          }
+
+          updateStatus("Formatting subtitles...", 90);
+          const data = await res.json();
+          const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+          
+          displaySubtitles(rawSRT);
+          updateStatus("Subtitles generated successfully!", 100);
+          setTimeout(() => statusContainer.classList.add('hidden'), 2000);
+          return;
+        } catch (err) {
+          lastError = err;
+          // If 404/not available, continue loop to fallback
+          if (!err.message.includes('not available') && !err.message.includes('404')) {
+            break;
+          }
         }
-
-        updateStatus("Formatting subtitles...", 90);
-        const data = await res.json();
-        const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-        
-        displaySubtitles(rawSRT);
-        updateStatus("Subtitles generated successfully!", 100);
-        setTimeout(() => statusContainer.classList.add('hidden'), 2000);
-
-      } catch (err) {
-        alert(`Error: ${err.message}`);
-        statusContainer.classList.add('hidden');
       }
+
+      alert(`Error: ${lastError ? lastError.message : 'Unknown error'}`);
+      statusContainer.classList.add('hidden');
     }
 
     async function uploadViaFilesAPI(apiKey, file) {
@@ -568,7 +562,6 @@ Requirements:
       progressBar.style.width = `${percent}%`;
     }
 
-    // --- Subtitle Parsing & Syncing ---
     function displaySubtitles(rawText) {
       const cleaned = rawText.replace(/^```(srt)?\s*/i, '').replace(/```$/i, '').trim();
       rawSRTTextarea.value = cleaned;
@@ -671,7 +664,6 @@ Requirements:
       }, 200);
     }
 
-    // --- Tab Views ---
     viewListTab.addEventListener('click', () => {
       viewListTab.className = "text-xs px-3 py-1.5 rounded-lg bg-sky-500/10 text-sky-400 border border-sky-500/30 font-medium transition";
       viewRawTab.className = "text-xs px-3 py-1.5 rounded-lg text-slate-400 hover:text-slate-200 border border-slate-800 font-medium transition";
@@ -691,7 +683,6 @@ Requirements:
       renderCues(parsedCues);
     });
 
-    // --- Export Handlers ---
     btnCopySRT.addEventListener('click', () => {
       const text = rawSRTTextarea.value.trim();
       if (!text) return alert('No subtitles available.');
@@ -716,7 +707,6 @@ Requirements:
       URL.revokeObjectURL(url);
     });
 
-    // Auto-load demo on first visit
     window.addEventListener('DOMContentLoaded', () => {
       displaySubtitles(DEMO_SRT);
       startPlaybackSync();
