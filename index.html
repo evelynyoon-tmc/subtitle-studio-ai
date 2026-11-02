@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Subtitle Studio AI — Preview & Interactive Demo</title>
+  <title>Subtitle Studio AI — Gemini 3.8 Subtitle Generator</title>
   <!-- Tailwind CSS CDN -->
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- FontAwesome Icons -->
@@ -18,12 +18,6 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen font-sans antialiased flex flex-col">
 
-  <!-- Preview Banner for Coworkers -->
-  <div class="bg-gradient-to-r from-sky-600 via-indigo-600 to-purple-600 px-4 py-2 text-center text-xs font-medium text-white flex items-center justify-center gap-2 shadow-md">
-    <span class="bg-white/20 px-2 py-0.5 rounded text-[10px] uppercase font-bold tracking-wider">Team Preview</span>
-    <span>Ready to test! Use <strong>"Demo Mode"</strong> without an API key or switch to <strong>Live Mode</strong> with your Gemini key.</span>
-  </div>
-
   <!-- Header -->
   <header class="border-b border-slate-800 bg-slate-900/90 backdrop-blur sticky top-0 z-50 px-6 py-3.5 flex flex-wrap items-center justify-between gap-4">
     <div class="flex items-center space-x-3">
@@ -35,7 +29,7 @@
           <h1 class="text-xl font-bold tracking-tight bg-gradient-to-r from-white via-slate-200 to-sky-400 bg-clip-text text-transparent">
             Subtitle Studio AI
           </h1>
-          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 3.8</span>
+          <span class="text-[10px] font-semibold uppercase px-2 py-0.5 rounded-full bg-sky-500/10 text-sky-400 border border-sky-500/30">Gemini 3.8 Flash</span>
         </div>
         <p class="text-xs text-slate-400">Intelligent video understanding & automated subtitle generation</p>
       </div>
@@ -80,7 +74,7 @@
         </div>
         <div>
           <h2 class="text-sm font-semibold text-slate-100">Ready-to-test Demo Video pre-configured</h2>
-          <p class="text-xs text-slate-400">Simulates video analysis with instant cue generation and interactive playback sync.</p>
+          <p class="text-xs text-slate-400">Tests video playback, active timestamp cues, caption overlays, and SRT download without needing an API key.</p>
         </div>
       </div>
       <button id="btnRunDemo" class="w-full sm:w-auto bg-gradient-to-r from-sky-400 to-indigo-500 hover:from-sky-300 hover:to-indigo-400 active:scale-95 text-slate-950 font-bold px-6 py-2.5 rounded-xl shadow-lg shadow-sky-500/20 transition flex items-center justify-center space-x-2 text-xs">
@@ -143,7 +137,7 @@
       <div class="flex items-center justify-between text-xs mb-2">
         <span id="statusMessage" class="text-slate-300 font-medium flex items-center gap-2">
           <i class="fa-solid fa-circle-notch fa-spin text-sky-400"></i>
-          Initializing Gemini 3.8 video engine...
+          Initializing Gemini 3.8 Flash video engine...
         </span>
         <span id="statusPercent" class="text-sky-400 font-mono font-semibold">0%</span>
       </div>
@@ -170,7 +164,7 @@
           </video>
           <div id="ytContainer" class="w-full h-full hidden"></div>
 
-          <!-- Subtitle Overlay -->
+          <!-- Dynamic Subtitle Overlay -->
           <div id="subtitleOverlay" class="absolute bottom-12 left-4 right-4 text-center pointer-events-none transition-opacity duration-150">
             <span id="subtitleOverlayText" class="inline-block bg-black/85 text-yellow-300 px-3.5 py-1.5 rounded-md text-xs sm:text-sm font-semibold shadow-lg backdrop-blur-sm border border-black/40"></span>
           </div>
@@ -441,49 +435,37 @@ Requirements:
 
     async function generateLiveSubtitles(apiKey, mediaPart) {
       statusContainer.classList.remove('hidden');
-      updateStatus("Gemini 3.8 analyzing video streams...", 60);
+      updateStatus("Gemini 3.8 Flash analyzing video streams...", 60);
 
-      // Uses gemini-3.8-flash for modern Google AI Studio keys
-      const modelsToTry = ['gemini-3.8-flash', 'gemini-2.5-flash'];
-      let lastError = null;
+      try {
+        const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/gemini-3.8-flash:generateContent?key=${apiKey}`;
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{
+              parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
+            }]
+          })
+        });
 
-      for (const model of modelsToTry) {
-        try {
-          const endpoint = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-          const res = await fetch(endpoint, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              contents: [{
-                parts: [{ text: SUBTITLE_PROMPT }, mediaPart]
-              }]
-            })
-          });
-
-          if (!res.ok) {
-            const err = await res.json();
-            throw new Error(err.error?.message || `HTTP error ${res.status}`);
-          }
-
-          updateStatus("Formatting subtitles...", 90);
-          const data = await res.json();
-          const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
-          
-          displaySubtitles(rawSRT);
-          updateStatus("Subtitles generated successfully!", 100);
-          setTimeout(() => statusContainer.classList.add('hidden'), 2000);
-          return;
-        } catch (err) {
-          lastError = err;
-          // If 404/not available, continue loop to fallback
-          if (!err.message.includes('not available') && !err.message.includes('404')) {
-            break;
-          }
+        if (!res.ok) {
+          const err = await res.json();
+          throw new Error(err.error?.message || `HTTP error ${res.status}`);
         }
-      }
 
-      alert(`Error: ${lastError ? lastError.message : 'Unknown error'}`);
-      statusContainer.classList.add('hidden');
+        updateStatus("Formatting subtitles...", 90);
+        const data = await res.json();
+        const rawSRT = data.candidates?.[0]?.content?.parts?.[0]?.text || '';
+        
+        displaySubtitles(rawSRT);
+        updateStatus("Subtitles generated successfully!", 100);
+        setTimeout(() => statusContainer.classList.add('hidden'), 2000);
+
+      } catch (err) {
+        alert(`Error: ${err.message}`);
+        statusContainer.classList.add('hidden');
+      }
     }
 
     async function uploadViaFilesAPI(apiKey, file) {
